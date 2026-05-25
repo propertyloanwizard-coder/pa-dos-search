@@ -60,10 +60,6 @@ export async function POST(req: NextRequest) {
         // 2. Update Supabase with validation results
         const updateBody = {
             validation_status: validationResult.status,
-            validation_result: {
-                matched_entity: match,
-                validation_status: validationResult.status
-            },
             entity_id: validationResult.entity_id,
             entity_type: validationResult.entity_type,
             county: validationResult.county
