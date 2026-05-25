@@ -8,6 +8,7 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY
 const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'PABusinessComplianceGroup@gmail.com'
 
 export async function POST(req: NextRequest) {
+  let dbUpdateStatus = 'not_attempted'
   if (!SUPABASE_KEY) {
     return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
   }
@@ -81,6 +82,9 @@ export async function POST(req: NextRequest) {
         
         if (!updateRes.ok) {
             console.error('Supabase update failed:', updateRes.status, await updateRes.text())
+            dbUpdateStatus = `failed (${updateRes.status})`
+        } else {
+            dbUpdateStatus = `success (${updateRes.status})`
         }
       } else {
         validationResult = { status: 'not_found', message: 'No exact match found' }
@@ -88,8 +92,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Send email notification via Resend
+    let emailStatus = 'not_attempted'
     if (RESEND_API_KEY) {
-      await fetch('https://api.resend.com/emails', {
+      const emailRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,9 +115,16 @@ export async function POST(req: NextRequest) {
           `,
         }),
       })
+      const emailBody = await emailRes.text()
+      if (emailRes.ok) {
+        emailStatus = `sent: ${emailBody}`
+      } else {
+        emailStatus = `failed (${emailRes.status}): ${emailBody}`
+        console.error('Resend email failed:', emailRes.status, emailBody)
+      }
     }
 
-    return NextResponse.json({ success: true, validation: validationResult, dbUpdateStatus: updateRes?.status || 'not_attempted' })
+    return NextResponse.json({ success: true, validation: validationResult, dbUpdateStatus, emailStatus })
   } catch (error: any) {
     console.error('Filing webhook error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
