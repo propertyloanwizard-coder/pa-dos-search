@@ -77,8 +77,9 @@ export async function POST(req: NextRequest) {
         })
         
         if (!updateRes.ok) {
-            console.error('Supabase update failed:', updateRes.status, await updateRes.text())
-            dbUpdateStatus = `failed (${updateRes.status})`
+            const errorText = await updateRes.text()
+            console.error('Supabase update failed:', updateRes.status, errorText)
+            dbUpdateStatus = `failed (${updateRes.status}): ${errorText}`
         } else {
             dbUpdateStatus = `success (${updateRes.status})`
         }
