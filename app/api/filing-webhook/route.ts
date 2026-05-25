@@ -25,18 +25,15 @@ export async function POST(req: NextRequest) {
     const recordId = record.id
 
     // 1. Validate entity via our search API
-    // We construct the URL using VERCEL_URL if available, or fallback to the known deployment URL
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'https://pa-dos-search.vercel.app'
+    const searchUrl = process.env.SEARCH_API_URL || 'https://pa-dos-search.vercel.app/api/search-entity'
       
-    const searchRes = await fetch(`${baseUrl}/api/search-entity`, {
+    const searchRes = await fetch(searchUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: entityName }),
     })
 
-    let validationResult: any = { status: 'error', message: 'Search failed' }
+    let validationResult: any = { status: 'error', message: 'Search failed', code: searchRes.status }
     
     if (searchRes.ok) {
       const searchData = await searchRes.json()
