@@ -74,10 +74,14 @@ export async function POST(req: NextRequest) {
             'Content-Type': 'application/json',
             'apikey': SUPABASE_KEY,
             'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal'
+            'Prefer': 'return=representation'
           },
           body: JSON.stringify(updateBody)
         })
+        
+        if (!updateRes.ok) {
+            console.error('Supabase update failed:', updateRes.status, await updateRes.text())
+        }
       } else {
         validationResult = { status: 'not_found', message: 'No exact match found' }
       }
@@ -108,7 +112,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    return NextResponse.json({ success: true, validation: validationResult })
+    return NextResponse.json({ success: true, validation: validationResult, dbUpdateStatus: updateRes?.status || 'not_attempted' })
   } catch (error: any) {
     console.error('Filing webhook error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
