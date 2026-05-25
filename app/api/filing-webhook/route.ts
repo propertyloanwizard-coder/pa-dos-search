@@ -5,7 +5,7 @@ export const maxDuration = 30
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://aylpplunqenhixzxpfhp.supabase.co'
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const RESEND_API_KEY = process.env.RESEND_API_KEY
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'info@pabusinesscompliancegroup.com'
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'PABusinessComplianceGroup@gmail.com'
 
 export async function POST(req: NextRequest) {
   if (!SUPABASE_KEY) {
