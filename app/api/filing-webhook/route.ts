@@ -57,13 +57,18 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. Update Supabase with validation results
-        // We need to stringify the object for the JSONB column
-        const resultJson = JSON.stringify({
-            matched_entity: match,
-            validation_status: validationResult.status
-        })
+        const updateBody = {
+            validation_status: validationResult.status,
+            validation_result: {
+                matched_entity: match,
+                validation_status: validationResult.status
+            },
+            entity_id: validationResult.entity_id,
+            entity_type: validationResult.entity_type,
+            county: validationResult.county
+        }
 
-        await fetch(`${SUPABASE_URL}/rest/v1/filing_requests?id=eq.${recordId}`, {
+        const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/filing_requests?id=eq.${recordId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -71,13 +76,7 @@ export async function POST(req: NextRequest) {
             'Authorization': `Bearer ${SUPABASE_KEY}`,
             'Prefer': 'return=minimal'
           },
-          body: JSON.stringify({
-            validation_status: validationResult.status,
-            validation_result: resultJson,
-            entity_id: validationResult.entity_id,
-            entity_type: validationResult.entity_type,
-            county: validationResult.county
-          })
+          body: JSON.stringify(updateBody)
         })
       } else {
         validationResult = { status: 'not_found', message: 'No exact match found' }
