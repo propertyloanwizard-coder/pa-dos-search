@@ -4,7 +4,8 @@ export const maxDuration = 30
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://aylpplunqenhixzxpfhp.supabase.co'
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
+const RESEND_API_KEY = process.env.RESEND_API_KEY
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || 'info@pabusinesscompliancegroup.com'
 
 export async function POST(req: NextRequest) {
   if (!SUPABASE_KEY) {
@@ -86,14 +87,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Notify via Discord (if webhook configured)
-    if (DISCORD_WEBHOOK_URL) {
-      await fetch(DISCORD_WEBHOOK_URL, {
+    // 3. Send email notification via Resend
+    if (RESEND_API_KEY) {
+      await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+        },
         body: JSON.stringify({
-          content: `🏛️ **New Filing Request Validated**\n\n**Entity:** ${entityName}\n**Status:** ${validationResult.status.toUpperCase()}\n**Entity ID:** ${validationResult.entity_id || 'N/A'}\n**Type:** ${validationResult.entity_type || 'N/A'}\n**County:** ${validationResult.county || 'N/A'}`
-        })
+          from: 'PA Business Compliance <onboarding@resend.dev>',
+          to: NOTIFY_EMAIL,
+          subject: `Filing Validated: ${entityName}`,
+          html: `
+            <h2>🏛️ New Filing Request Validated</h2>
+            <p><strong>Entity:</strong> ${entityName}</p>
+            <p><strong>Status:</strong> ${validationResult.status.toUpperCase()}</p>
+            <p><strong>Entity ID:</strong> ${validationResult.entity_id || 'N/A'}</p>
+            <p><strong>Type:</strong> ${validationResult.entity_type || 'N/A'}</p>
+            <p><strong>County:</strong> ${validationResult.county || 'N/A'}</p>
+            <p><a href="https://file.dos.pa.gov">File Annual Report →</a></p>
+          `,
+        }),
       })
     }
 
